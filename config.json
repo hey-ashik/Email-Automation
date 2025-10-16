@@ -1,0 +1,7 @@
+{
+    "smtp_server": "smtp.gmail.com",
+    "smtp_port": 587,
+    "sender_email": "ashikulislam2070@gmail.com",
+    "sender_password": "srao nyrz zyfk dnoq",
+    "sender_name": "Ashikul Islam"
+}

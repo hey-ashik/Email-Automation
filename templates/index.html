@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Automation Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h2><i class="fas fa-envelope"></i> Email Auto</h2>
+            <button class="close-btn" id="closeSidebar">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="#upload-section" class="nav-item active" data-section="upload">
+                <i class="fas fa-file-upload"></i>
+                <span>Upload Data</span>
+            </a>
+            <a href="#config-section" class="nav-item" data-section="config">
+                <i class="fas fa-cog"></i>
+                <span>Email Config</span>
+            </a>
+            <a href="#send-section" class="nav-item" data-section="send">
+                <i class="fas fa-paper-plane"></i>
+                <span>Send Emails</span>
+            </a>
+            <a href="#logs-section" class="nav-item" data-section="logs">
+                <i class="fas fa-list"></i>
+                <span>Logs</span>
+            </a>
+            <a href="#instructions-section" class="nav-item" data-section="instructions">
+                <i class="fas fa-info-circle"></i>
+                <span>Instructions</span>
+            </a>
+        </nav>
+    </div>
+
+    <!-- Overlay for mobile -->
+    <div class="overlay" id="overlay"></div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Top Bar -->
+        <div class="topbar">
+            <button class="menu-toggle" id="menuToggle">
+                <i class="fas fa-bars"></i>
+            </button>
+            <h1>Email Automation Dashboard</h1>
+            <div class="status-indicator" id="statusIndicator">
+                <span class="status-dot"></span>
+                <span class="status-text">Ready</span>
+            </div>
+        </div>
+
+        <!-- Content Sections -->
+        <div class="content-wrapper">
+            
+            <!-- Upload Section -->
+            <section class="content-section active" id="upload-section">
+                <div class="section-header">
+                    <h2><i class="fas fa-file-upload"></i> Upload Your Data</h2>
+                    <p>Upload an Excel file or connect to Google Sheets</p>
+                </div>
+
+                <div class="card-grid">
+                    <!-- Excel Upload -->
+                    <div class="card">
+                        <div class="card-header">
+                            <i class="fas fa-file-excel"></i>
+                            <h3>Upload Excel/CSV File</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="upload-area" id="uploadArea">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <p>Drag & drop your file here or click to browse</p>
+                                <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" hidden>
+                                <button class="btn btn-secondary" onclick="document.getElementById('fileInput').click()">
+                                    Choose File
+                                </button>
+                            </div>
+                            <div id="filePreview" class="file-preview" style="display: none;">
+                                <div class="preview-header">
+                                    <span id="fileName"></span>
+                                    <button class="btn-icon" onclick="clearFile()">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                                <div id="dataPreview" class="data-preview"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Google Sheets -->
+                    <div class="card">
+                        <div class="card-header">
+                            <i class="fab fa-google"></i>
+                            <h3>Connect Google Sheets</h3>
+                        </div>
+                        <div class="card-body">
+                            <p class="help-text">Paste a public Google Sheets link</p>
+                            <div class="input-group">
+                                <input type="url" id="googleSheetUrl" class="input" placeholder="https://docs.google.com/spreadsheets/d/...">
+                                <button class="btn btn-primary" onclick="loadGoogleSheet()">
+                                    <i class="fas fa-download"></i> Load Sheet
+                                </button>
+                            </div>
+                            <div id="sheetPreview" class="sheet-preview" style="display: none;">
+                                <h4>Data Preview</h4>
+                                <div id="sheetDataPreview" class="data-preview"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Configuration Section -->
+            <section class="content-section" id="config-section">
+                <div class="section-header">
+                    <h2><i class="fas fa-cog"></i> Email Configuration</h2>
+                    <p>Set up your email sender credentials</p>
+                </div>
+
+                <div class="card">
+                    <div class="card-body">
+                        <form id="configForm">
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label for="senderName">
+                                        <i class="fas fa-user"></i> Sender Name
+                                    </label>
+                                    <input type="text" id="senderName" class="input" placeholder="Your Name" value="{{ config.sender_name }}">
+                                    <small>This name will appear in recipients' inbox</small>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="senderEmail">
+                                        <i class="fas fa-envelope"></i> Sender Email
+                                    </label>
+                                    <input type="email" id="senderEmail" class="input" placeholder="your-email@gmail.com" value="{{ config.sender_email }}" required>
+                                    <small>Your Gmail address</small>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="senderPassword">
+                                        <i class="fas fa-lock"></i> App Password
+                                    </label>
+                                    <input type="password" id="senderPassword" class="input" placeholder="xxxx xxxx xxxx xxxx" value="{{ config.sender_password }}" required>
+                                    <small>Use Gmail App Password, not your regular password</small>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="smtpServer">
+                                        <i class="fas fa-server"></i> SMTP Server
+                                    </label>
+                                    <input type="text" id="smtpServer" class="input" value="{{ config.smtp_server }}" required>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="smtpPort">
+                                        <i class="fas fa-plug"></i> SMTP Port
+                                    </label>
+                                    <input type="number" id="smtpPort" class="input" value="{{ config.smtp_port }}" required>
+                                </div>
+                            </div>
+
+                            <div class="form-actions">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save"></i> Save Configuration
+                                </button>
+                                <button type="button" class="btn btn-secondary" onclick="testConnection()">
+                                    <i class="fas fa-vial"></i> Test Connection
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Instructions Card -->
+                <div class="card alert-info">
+                    <div class="card-body">
+                        <h4><i class="fas fa-lightbulb"></i> How to get Gmail App Password</h4>
+                        <ol>
+                            <li>Go to your Google Account settings</li>
+                            <li>Navigate to Security → 2-Step Verification</li>
+                            <li>Scroll down to "App passwords"</li>
+                            <li>Generate a new app password for "Mail"</li>
+                            <li>Copy and paste the 16-character password here</li>
+                        </ol>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Send Emails Section -->
+            <section class="content-section" id="send-section">
+                <div class="section-header">
+                    <h2><i class="fas fa-paper-plane"></i> Send Emails</h2>
+                    <p>Start your email campaign</p>
+                </div>
+
+                <div class="card">
+                    <div class="card-body">
+                        <div id="sendStatus" class="send-status">
+                            <div class="status-card">
+                                <i class="fas fa-database"></i>
+                                <div>
+                                    <h4>Data Source</h4>
+                                    <p id="dataSourceInfo">No file loaded</p>
+                                </div>
+                            </div>
+                            <div class="status-card">
+                                <i class="fas fa-envelope"></i>
+                                <div>
+                                    <h4>Total Emails</h4>
+                                    <p id="totalEmails">0</p>
+                                </div>
+                            </div>
+                            <div class="status-card">
+                                <i class="fas fa-check-circle"></i>
+                                <div>
+                                    <h4>Sent</h4>
+                                    <p id="sentCount">0</p>
+                                </div>
+                            </div>
+                            <div class="status-card">
+                                <i class="fas fa-times-circle"></i>
+                                <div>
+                                    <h4>Failed</h4>
+                                    <p id="failedCount">0</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="send-controls">
+                            <button class="btn btn-primary btn-large" id="startSendBtn" onclick="startSending()">
+                                <i class="fas fa-play"></i> Start Sending
+                            </button>
+                            <button class="btn btn-danger btn-large" id="stopSendBtn" onclick="stopSending()" style="display: none;">
+                                <i class="fas fa-stop"></i> Stop Sending
+                            </button>
+                        </div>
+
+                        <div id="sendProgress" class="progress-container" style="display: none;">
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="progressFill"></div>
+                            </div>
+                            <p class="progress-text" id="progressText">Sending emails...</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Logs Section -->
+            <section class="content-section" id="logs-section">
+                <div class="section-header">
+                    <h2><i class="fas fa-list"></i> Email Logs</h2>
+                    <p>View detailed send history</p>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Recent Activity</h3>
+                        <button class="btn btn-secondary btn-small" onclick="clearLogs()">
+                            <i class="fas fa-trash"></i> Clear Logs
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div id="logsContainer" class="logs-container">
+                            <p class="empty-state">No logs yet. Start sending emails to see activity here.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Instructions Section -->
+            <section class="content-section" id="instructions-section">
+                <div class="section-header">
+                    <h2><i class="fas fa-info-circle"></i> Instructions</h2>
+                    <p>How to use this email automation tool</p>
+                </div>
+
+                <div class="card-grid">
+                    <div class="card">
+                        <div class="card-header">
+                            <i class="fas fa-file-excel"></i>
+                            <h3>Excel File Format</h3>
+                        </div>
+                        <div class="card-body">
+                            <p>Your Excel/CSV file must contain these columns:</p>
+                            <ul class="requirements-list">
+                                <li><strong>To</strong> - Recipient email (Required)</li>
+                                <li><strong>Subject</strong> - Email subject (Required)</li>
+                                <li><strong>Body</strong> - Email message body (Required)</li>
+                                <li><strong>CC</strong> - Carbon copy recipients (Optional)</li>
+                                <li><strong>BCC</strong> - Blind carbon copy (Optional)</li>
+                                <li><strong>Attachment</strong> - File path to attachment (Optional)</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <i class="fas fa-table"></i>
+                            <h3>Example Data</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="example-table">
+                                    <thead>
+                                        <tr>
+                                            <th>To</th>
+                                            <th>Subject</th>
+                                            <th>Body</th>
+                                            <th>CC</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>john@example.com</td>
+                                            <td>Hello John</td>
+                                            <td>This is a test email</td>
+                                            <td>jane@example.com</td>
+                                        </tr>
+                                        <tr>
+                                            <td>jane@example.com</td>
+                                            <td>Hello Jane</td>
+                                            <td>Another test message</td>
+                                            <td></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <i class="fas fa-shield-alt"></i>
+                            <h3>Security Tips</h3>
+                        </div>
+                        <div class="card-body">
+                            <ul class="tips-list">
+                                <li>Always use App Passwords, never your actual Gmail password</li>
+                                <li>Enable 2-Factor Authentication on your Google account</li>
+                                <li>Keep your credentials confidential</li>
+                                <li>Test with a small batch before sending to large lists</li>
+                                <li>Respect email sending limits (Gmail: ~500/day)</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <i class="fas fa-rocket"></i>
+                            <h3>Getting Started</h3>
+                        </div>
+                        <div class="card-body">
+                            <ol class="steps-list">
+                                <li>Prepare your Excel file with required columns</li>
+                                <li>Upload the file or connect Google Sheets</li>
+                                <li>Configure your email settings</li>
+                                <li>Test with a small sample first</li>
+                                <li>Start sending your emails</li>
+                                <li>Monitor logs for status updates</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

@@ -1,0 +1,8 @@
+pandas
+openpyxl
+flask
+werkzeug
+requests
+gspread
+oauth2client
+python-dotenv
